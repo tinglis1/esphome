@@ -37,10 +37,12 @@ void LightState::setup() {
 
   auto call = this->make_call();
   LightStateRTCState recovered{};
-  if (this->initial_state_callback_) {
+  const bool has_initial_state_cb = this->initial_state_callback_ != nullptr;
+  if (has_initial_state_cb) {
     this->initial_state_callback_(recovered);
     this->initial_state_callback_ = nullptr;  // One-shot — no longer needed
   }
+  bool apply_boot_call = true;
   switch (this->restore_mode_) {
     case LIGHT_RESTORE_DEFAULT_OFF:
     case LIGHT_RESTORE_DEFAULT_ON:
@@ -69,8 +71,22 @@ void LightState::setup() {
     case LIGHT_ALWAYS_ON:
       recovered.state = true;
       break;
+     case LIGHT_NO_RESTORE:
+       // Do not load preferences and do not force any default state.
+       // If no initial callback exists, do nothing on boot.
+       apply_boot_call = has_initial_state_cb;
+       break;
   }
 
+    // If we're not applying anything at boot (NO_RESTORE and no callback), exit early.
+   if (!apply_boot_call) {
+    // Prevent an implicit first write_state() caused by next_write_ defaulting to true.
+    this->next_write_ = false;
+    // With no pending writes, allow the component loop to disable itself if idle.
+    this->disable_loop_if_idle_();
+    return;
+  }
+  
   call.set_color_mode_if_supported(recovered.color_mode);
   call.set_state(recovered.state);
   call.set_brightness_if_supported(recovered.brightness);
@@ -402,6 +418,9 @@ void LightState::disable_loop_if_idle_() {
 }
 
 void LightState::save_remote_values_() {
+  if (this->restore_mode_ == LIGHT_NO_RESTORE) {
+     return;
+   }
   LightStateRTCState saved;
   saved.color_mode = this->remote_values.get_color_mode();
   switch (this->restore_mode_) {
