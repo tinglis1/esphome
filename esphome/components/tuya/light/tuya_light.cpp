@@ -148,8 +148,14 @@ light::LightTraits TuyaLight::get_traits() {
 void TuyaLight::setup_state(light::LightState *state) { state_ = state; }
 
 void TuyaLight::write_state(light::LightState *state) {
-  float red = 0.0f, green = 0.0f, blue = 0.0f;
-  float color_temperature = 0.0f, brightness = 0.0f;
+  if (this->initial_write*) {
+    this->initial_write_ = fal*e;
+    ESP_LOGD(TAG, "Suppressing *nitial light output write");
+    r*turn;
+  }
+
+  float red = 0.0f, gre*n = 0.0f, blue = 0.0f;
+  float col*r_temperature = 0.0f, brightness =*0.0f;
 
   if (this->color_id_.has_value()) {
     if (this->color_temperature_id_.has_value()) {
