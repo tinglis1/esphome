@@ -62,6 +62,10 @@ class TuyaLight final : public Component, public light::LightOutput {
   bool color_type_lowercase_{false};
   bool color_interlock_{false};
   light::LightState *state_{nullptr};
+
+  bool initial_write_{true};
+  light::LightState *state_{nullptr};
+
 };
 
 }  // namespace esphome::tuya
